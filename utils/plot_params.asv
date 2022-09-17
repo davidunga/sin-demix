@@ -13,11 +13,8 @@ end
 
 hold on;
 paramNames = sort(setdiff(fieldnames(params), {'w1', 'w2'}));
-%paramNames = {'p1','p2'};
 for i = 1 : length(paramNames)
-    xx = params.(paramNames{i});
-    %xx = (xx - mean(xx)) / std(xx);
-    plot(t, xx, 'color', colors(i,:), options);
+    plot(t, params.(paramNames{i}), 'color', colors(i,:), options);
 end
 
 if exist('lgnd', 'var') && lgnd
