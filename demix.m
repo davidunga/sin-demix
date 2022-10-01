@@ -1,14 +1,14 @@
-function result = demix(v, t, w1, w2)
+function comps_hat = demix(v, t, w1, w2)
 % Demix time sequence into a time-modulated sum of sins.
 % Specifically, for a signal v(t), assumed to be a mixture of the form:
 %   v(t) = a0(t) + a1(t)*sin(w1*t + p1(t)) + a2(t)*sin(w2*t + p2(t))
-% Finds the time-varying amplitudes {a0,a1,a2} and phases {p1,p2}, under
-% the assumption that they are varying slower than max(w1,w2).
+% Finds [a0(t)], [a1(t)*sin(w1*t + p1(t))], and [a2(t)*sin(w2*t + p2(t))]
+% under the assumption that they are varying slower than max(w1,w2).
 % INPUT:
 %   v, t - signal and time vectors to demix
 %   w1, w2 - frequency of the underlying sins
 % OUTPUT:
-%   struct with esimated parameters.
+%   estimated components, given as a [3, length(t)] array.
 
 v = v(:);
 t = t(:);
@@ -25,11 +25,13 @@ x(1:2,:) = x([3,3],:);
 x(end-1:end,:) = x([end-2, end-2],:);
 x = x';
 
-result = struct();
-result.a0 = x(1, :);
-result.a1 = sqrt(x(2,:).^2 + x(3,:).^2);
-result.p1 = atan2(x(3,:), x(2,:));
-result.a2 = sqrt(x(4,:).^2 + x(5,:).^2);
-result.p2 = atan2(x(5,:), x(4,:));
-result.w1 = w1;
-result.w2 = w2;
+params_hat = struct();
+params_hat.a0 = x(1, :);
+params_hat.a1 = sqrt(x(2,:).^2 + x(3,:).^2);
+params_hat.p1 = atan2(x(3,:), x(2,:));
+params_hat.a2 = sqrt(x(4,:).^2 + x(5,:).^2);
+params_hat.p2 = atan2(x(5,:), x(4,:));
+params_hat.w1 = w1;
+params_hat.w2 = w2;
+
+[~, comps_hat] = params2signal(params_hat, t, true);

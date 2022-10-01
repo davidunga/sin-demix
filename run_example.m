@@ -36,8 +36,7 @@ params.w2 = w2;
 % --
 % estimate components from mixed signal
 
-params_hat = demix(v, t, w1, w2);
-[~, comps_hat] = params2signal(params_hat, t, true);
+comps_hat = demix(v, t, w1, w2);
 
 disp("randseed " + num2str(seed));
 evaluate_prediction(comps, comps_hat, comp_names);
@@ -45,9 +44,9 @@ evaluate_prediction(comps, comps_hat, comp_names);
 % --
 % show:
 
-tl = true;
+use_sp = true;
 figure('num','off','name',['randseed ' num2str(seed) ]);
-if tl, tiledlayout(4,1); end
-plot_sines(comps, t, true, grid, comp_names);
-plot_sines(comps_hat, t, false, grid);
+if use_sp, tiledlayout(4,1); end
+plot_sines(comps, t, true, use_sp, comp_names);
+plot_sines(comps_hat, t, false, use_sp);
 

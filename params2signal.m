@@ -3,12 +3,14 @@ function [v, comps, comp_names] = params2signal(params, t, smooth)
 % INPUT:
 %   params - params struct
 %   t - time vector
+%   smooth - logical, apply smoothing? default = false
 % OUTPUT:
 %   v - the mixed signal, size = [1, length(t)]
 %   comps - components (dc, sin1, sin2), size = [3, length(t)]
 
 if ~exist('smooth', 'var'), smooth=false; end
 
+t = t(:)';
 L = length(t);
 a0 = expand(params.a0, L);
 a1 = expand(params.a1, L);
