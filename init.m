@@ -1,16 +1,11 @@
 function init()
 % Initialize enviroment
 
-BLACKLIST = {'deprecate', [ filesep '_' ], [ filesep '.' ]};
+IGNORE = ["deprecate", filesep + "_", filesep + "."];
 
-fprintf('Initializing %s ... ', cd);
+fprintf('--- %s --- \n', upper(cd));
+fprintf('Initializing paths... ');
 restoredefaultpath();
-subdirs = textscan(genpath(cd),'%s','Delimiter',pathsep);
-subdirs = subdirs{1};
-inds = true;
-for k = 1 : length(BLACKLIST)
-    inds = inds & ~contains(subdirs,lower(BLACKLIST{k}));
-end
-addpath(sprintf('%s;',subdirs{inds}));
-
+subdirs = split(string(genpath(cd)),pathsep);
+addpath(join(subdirs(~contains(subdirs,IGNORE)),pathsep));
 fprintf('Done.\n');

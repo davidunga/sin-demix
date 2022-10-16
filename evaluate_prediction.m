@@ -1,10 +1,12 @@
-function evaluate_prediction(comps_gt, comps_hat, comp_names)
+function evaluate_prediction(comps_gt, comps_hat)
 % Evaluate prediction (comps_hat) relative to ground-truth (comps_gt)
+
+comp_names = ["DC", "Sin1", "Sin2"];
 
 disp('Abs Relative Error:');
 relerror(sum(comps_gt,1), sum(comps_hat,1), 'signal');
 for i = 1 : length(comp_names)
-    relerror(comps_gt(i, :), comps_hat(i, :), comp_names{i});
+    relerror(comps_gt(i, :), comps_hat(i, :), comp_names(i));
 end
 
 function err = relerror(gt, hat, name)

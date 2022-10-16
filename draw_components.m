@@ -1,23 +1,29 @@
-function draw_components(t,comps,v)
+function draw_components(Fs,comps,v)
+% Fs - sampling freq
+% comps - components
+% v - demixed (original) signal, optional.
 
 if nargin==2
     v=[];
 end
 
+t = (0:(size(comps,2)-1))'/Fs;
+
 figure();
 tl = tiledlayout(4,1);
 
-nexttile(); 
+nexttile(1);
 hold on;
 if ~isempty(v)
-    plot(t,v,'-m',LineWidth=2,DisplayName="Original");
+    plot(t,v,'-r',LineWidth=2,DisplayName="Original");
 end
 plot(t,sum(comps,1),'-b',DisplayName="Reconstructed");
 plot(t,sum(comps(1,:),1),'-c',DisplayName="DC");
-title("Signal");
+legend(Location="best",Orientation="horizontal");
+title("Signal"); xlim(t([1,end]));
 
-nexttile(); plot(t,comps(1,:),'-'); title("DC");
-nexttile(); plot(t,comps(2,:),'-'); title("Sin1");
-nexttile(); plot(t,comps(3,:),'-'); title("Sin2");
+nexttile(2); plot(t,comps(1,:),'c-'); title("DC"); xlim(t([1,end]));
+nexttile(3); plot(t,comps(2,:),'-'); title("Sin1"); xlim(t([1,end]));
+nexttile(4); plot(t,comps(3,:),'-'); title("Sin2"); xlabel("t"); xlim(t([1,end]));
 
-linkaxes(allchild(tl),'x');
+linkaxes(findobj(tl,'Type','Axes'),'x');

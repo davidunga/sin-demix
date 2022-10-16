@@ -31,22 +31,17 @@ params.p2 = pi/4 + phase_amp * sin(randrng(w_rng) * t);
 params.w1 = w1;
 params.w2 = w2;
 
-[v, comps, comp_names] = params2signal(params, t); % the mixed signal
+[v, comps] = params2signal(params, t); % the mixed signal
 
 % --
 % estimate components from mixed signal
 
-comps_hat = demix(v, t, w1, w2);
-
-disp("randseed " + num2str(seed));
-evaluate_prediction(comps, comps_hat, comp_names);
+comps_hat = demix(v, Fs, w1, w2);
 
 % --
-% show:
+% show results
 
-use_sp = true;
-figure('num','off','name',['randseed ' num2str(seed) ]);
-if use_sp, tiledlayout(4,1); end
-plot_sines(comps, t, true, use_sp, comp_names);
-plot_sines(comps_hat, t, false, use_sp);
+disp("randseed " + num2str(seed));
+evaluate_prediction(comps, comps_hat);
+plot_gt_and_prediction(t, comps, comps_hat);
 
