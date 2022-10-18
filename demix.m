@@ -1,14 +1,17 @@
 function [comps_hat,err] = demix(v, Fs, w1, w2)
-% Demix time sequence into a time-modulated sum of sins.
+% Demix time sequence into a time-modulated sine-like components.
 % Specifically, for a signal v(t), assumed to be a mixture of the form:
-%   v(t) = a0(t) + a1(t)*sin(w1*t + p1(t)) + a2(t)*sin(w2*t + p2(t))
-% Finds [a0(t)], [a1(t)*sin(w1*t + p1(t))], and [a2(t)*sin(w2*t + p2(t))]
-% under the assumption that they are varying slower than max(w1,w2).
+%   v(t) = a0(t) + a1(t)*sin(w1*t + p1(t)) + a2(t)*sin(w2*t + p2(t)), with
+%   known frequencies w1, w2, finds the components: 
+%   c1(t) = a0(t)
+%   c2(t) = a1(t)*sin(w1*t + p1(t))
+%   c3(t) = a2(t)*sin(w2*t + p2(t))
+% Under the assumption that they are varying slower than max(w1,w2).
 % INPUT:
 %   v, Fs - signal to demix and its sampling rate
 %   w1, w2 - frequency of the underlying sines
 % OUTPUT:
-%   comps_hat - estimated components, given as a [3, length(t)] array.
+%   comps_hat - estimated components, given as a [3, length(v)] array.
 %   err - reconstruction error- MSE normalized by signal variance, excluding boundaries
 
 v = v(:);
@@ -24,7 +27,6 @@ x = nan(size(A));
 for i = (r+1):(size(A,1)-r)
     x(i, :) = A(i + sample_ixs, :) \ v(i + sample_ixs);
 end
-
 x = x';
 
 params_hat = struct();
@@ -36,7 +38,7 @@ params_hat.p2 = atan2(x(5,:), x(4,:));
 params_hat.w1 = w1;
 params_hat.w2 = w2;
 
-[~, comps_hat] = params2signal(params_hat, t, false, r);
+comps_hat = params2comps(params_hat, t, r=r);
 
 % Reconstruction error: MSE normalized by signal variance, excluding boundaries
 ii = (r+1):length(v)-r+1;

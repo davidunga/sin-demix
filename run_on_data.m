@@ -43,5 +43,5 @@ result.sin2 = comps_hat(3,:);
 
 if options.plot
     draw_components(result,v);
-    sgtitle(DataBase.FR.FileName,"Interpreter","none");
+    sgtitle(string(DataBase.FR.FileName) + " " + src,"Interpreter","none");
 end

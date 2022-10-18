@@ -31,7 +31,8 @@ params.p2 = pi/4 + phase_amp * sin(randrng(w_rng) * t);
 params.w1 = w1;
 params.w2 = w2;
 
-[v, comps] = params2signal(params, t); % the mixed signal
+comps = params2comps(params, t);
+v = sum(comps,1); % the mixed signal
 
 % --
 % estimate components from mixed signal
