@@ -1,10 +1,26 @@
-function draw_components(Fs,comps,v)
-% Fs - sampling freq
-% comps - components
-% v - demixed (original) signal, optional.
+function draw_components(varargin)
+% draw_components(comps,Fs[,v])
+%   - comps = (3,:) components matrix,
+%   - Fs = sampling rate
+%   - v (optional) = the original (demixed) signal
+%
+% draw_components(result[,v])
+%   - result = result struct
+%   - v (optional) = the original (demixed) signal
 
-if nargin==2
-    v=[];
+v = [];
+if isstruct(varargin{1})
+    Fs = varargin{1}.Fs;
+    comps = [varargin{1}.dc;varargin{1}.sin1;varargin{1}.sin2];
+    if length(varargin)==2
+        v=varargin{2};
+    end
+else
+    comps = varargin{1};
+    Fs = varargin{2};
+    if length(varargin)==3
+        v=varargin{3};
+    end
 end
 
 t = (0:(size(comps,2)-1))'/Fs;
