@@ -32,7 +32,8 @@ end
 % --------------------------------------
 % demix:
 
-comps_hat = demix(v, Fs, w1, w2);
+[comps_hat,err] = stable_demix(v, Fs, w1, w2);
+fprintf("err: %2.4f\n",err);
 
 result = struct();
 result.src = src;

@@ -1,5 +1,5 @@
 function x = rsmpl(x, Fs, newFs, options)
-% resample x from Fs newFs
+% Resample x from sampling rate [Fs] to [newFs]
 
 arguments
     x
@@ -8,6 +8,13 @@ arguments
     options.method = "linear"
 end
 
+N = length(x)*newFs/Fs;
+if newFs > Fs
+    N = ceil(N);
+else
+    N = floor(N);
+end
+t_new = (0:(N-1)) / newFs;
+
 t = (0:(length(x)-1)) / Fs;
-tnew = (0:((round(length(x)*newFs/Fs))-1)) / newFs;
-x = interp1(t,x,tnew,options.method);
+x = interp1(t,x,t_new,options.method);
