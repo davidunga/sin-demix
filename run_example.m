@@ -45,6 +45,6 @@ comps_hat = stable_demix(v, Fs, w1, w2);
 disp("randseed " + num2str(seed));
 
 r = 2 * round(2*pi/max(w1,w2) * Fs);
-evaluate_prediction(comps, comps_hat, r);
+evaluate_prediction(comps, comps_hat);
 plot_gt_and_prediction(t, comps, comps_hat);
 
