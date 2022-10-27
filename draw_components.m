@@ -34,7 +34,7 @@ if ~isempty(v)
     plot(t,v,'-r',LineWidth=2,DisplayName="Original");
 end
 plot(t,sum(comps,1),'-b',DisplayName="Reconstructed");
-plot(t,sum(comps(1,:),1),'-c',DisplayName="DC");
+plot(t,comps(1,:),'-c',DisplayName="DC");
 legend(Location="best",Orientation="horizontal");
 title("Signal"); xlim(t([1,end]));
 

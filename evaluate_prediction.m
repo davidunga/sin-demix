@@ -1,5 +1,9 @@
-function evaluate_prediction(comps_gt, comps_hat)
+function evaluate_prediction(comps_gt, comps_hat, r)
 % Evaluate prediction (comps_hat) relative to ground-truth (comps_gt)
+
+%r = find(comps_hat(1,:)~=comps_hat(1,1),1,'first');
+comps_hat = comps_hat(:,r:end-r);
+comps_gt = comps_gt(:,r:end-r);
 
 comp_names = ["DC", "Sin1", "Sin2"];
 
@@ -10,11 +14,7 @@ for i = 1 : length(comp_names)
 end
 
 function err = relerror(gt, hat, name)
-if strcmpi(name, 'dc')
-    amp = mean(gt);
-else
-    amp = diff(prctile(gt, [1, 99]));
-end
+amp = std(gt,[],2)';
 
 err = (hat - gt) ./ amp;
-fprintf(' %-8s Median=%2.3f Max=%2.3f\n', name, median(abs(err)), max(abs(err)));
+fprintf(' %-8s Mean=%2.2f Median=%2.3f Max=%2.3f\n', name, mean(abs(err)), median(abs(err)), max(abs(err)));
