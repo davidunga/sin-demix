@@ -4,8 +4,7 @@ arguments
     v
     Fs
     ws
-    options.params = [2,50];
-    options.normP2 = true;
+    options.params = [3,50];
 end
 
 assert(length(ws)==1 || all(diff(ws) > 0), "Frequencies must be monotonically increasing");
@@ -13,7 +12,11 @@ assert(length(ws)==1 || all(diff(ws) > 0), "Frequencies must be monotonically in
 has_dc = ws(1) == 0;
 ws = ws(ws>0);
 
-WF = frqlocwt(v,Fs,ws/(2*pi),options.params,options.normP2);
+if options.params(2) == -1
+    options.params(2) = min(morseBandWidth_Time2Power(ws/(2*pi), options.params(1) * 39.99));
+end
+
+WF = wtbandpass(v,Fs,ws/(2*pi),options.params);
 comps = real(WF);
 
 if has_dc

@@ -1,4 +1,4 @@
-function fb = bandpass_filtbank(N,Fs,f,wv,fref)
+function fb = bandpass_filtbank(N,Fs,f,wv)
 % Frequency-localized filter bank.
 % Creates a filter bank which includes excactly 3 frequencies: [f-df,f,f+df],
 %   where df is the smallest frequency step (="voice") around f.
@@ -11,19 +11,10 @@ function fb = bandpass_filtbank(N,Fs,f,wv,fref)
 %   Either:
 %       wavelent name- {"morse"} / "amor" / "bump"
 %   or:
-%       parameters for morse wavelet- [gamma, P2], Where: 1 <= gamma <= P2, P2 <= 40*gamma
-%       If P2=-1, P2 is taken to be the largest possible value, depending also on fref.
-% fref - reference frequency. can be supplied only if wv is morse parameters.
-%   indicates that P2 is in reference to frequency=fref, and should be scaled to fit frequency=f.
+%       parameters for morse wavelet- [gamma, powerBandWidth]
 
 if ~exist("wv","var")
     wv = "morse";
-end
-
-if exist("fref","var")
-    assert(isnumeric(wv));
-else
-    fref = f;
 end
 
 vpo = 48;
@@ -35,12 +26,11 @@ params = struct( ...
 
 if isnumeric(wv)
     assert(length(wv)==2);
-    gamma = wv(1);
-    P2 = wv(2);
-    if P2 == -1
-        P2 = gamma*40;
+    wv(2) = morseBandWidth_Power2Time(f,wv(2));
+    if wv(2)<wv(1) || wv(2)>40*wv(1)
+        error("Invalid Params: gamma=%2.2f, TBW=%2.2f",wv(1),wv(2));
     end
-    params.WaveletParameters = [gamma,P2*(f/fref)^2];
+    params.WaveletParameters = wv;
 else
     params.Wavelet = wv;
 end
