@@ -1,4 +1,4 @@
-function [comps, err] = stable_demix(v, Fs, w1, w2)
+function [comps, err] = stable_demix(v, Fs, w1, w2, options)
 % A stable version of demix(). WIP.
 
 arguments
@@ -6,15 +6,25 @@ arguments
     Fs
     w1
     w2
+    options.mode = "wt"
+end
+
+switch options.mode
+    case "linear"
+        demix_fnc = @linear_demix;
+    case "wt"
+        demix_fnc = @wt_demix;
+    otherwise
+        error("Unknown demix mode %s", options.mode);
 end
 
 v = v(:)';
 
 % demix as usual:
-[comps_full,opt] = linear_demix(v, Fs, [0, w1, w2]);
+[comps_full,opt] = demix_fnc(v, Fs, [0, w1, w2]);
 
 % susbtract DC, demix again:
-comps_noDc = linear_demix(v - comps_full(1,:), Fs, [0, w1, w2]);
+comps_noDc = demix_fnc(v - comps_full(1,:), Fs, [0, w1, w2]);
 
 % final components: treat DC component of "no DC" demix as error, and
 % therefore substract if from the DC component. Take sin components from

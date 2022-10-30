@@ -17,7 +17,7 @@ arguments
     options.r_dur = 0   % radius of sampling window, in seconds. default = shortest period
 end
 
-assert(length(ws)==1 || all(diff(ws) > 0), "Frequencies must be unique and in ascending order");
+assert(length(ws)==1 || all(diff(ws) > 0), "Frequencies must be monotonically increasing");
 
 v = v(:);
 t = (0:(length(v)-1))'/Fs;
