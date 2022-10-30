@@ -4,7 +4,7 @@ arguments
     v
     Fs
     ws
-    options.params = [3,50];
+    options.params = [3,-1];
 end
 
 assert(length(ws)==1 || all(diff(ws) > 0), "Frequencies must be monotonically increasing");
@@ -13,7 +13,8 @@ has_dc = ws(1) == 0;
 ws = ws(ws>0);
 
 if options.params(2) == -1
-    options.params(2) = min(morseBandWidth_Time2Power(ws/(2*pi), options.params(1) * 39.99));
+    options.params(2) = max(morseBandWidth_Time2Power(ws/(2*pi), options.params(1) * 39.99));
+    options.params
 end
 
 WF = wtbandpass(v,Fs,ws/(2*pi),options.params);

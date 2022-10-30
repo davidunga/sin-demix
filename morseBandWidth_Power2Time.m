@@ -8,4 +8,6 @@ REF_F = 100;
 REF_TBW = 10;
 REF_HPBW = 52.34;
 
-tbw = REF_TBW * (f/REF_F)^2 * (halfpbw/REF_HPBW);
+factor = (REF_TBW * REF_HPBW^2) * (f/REF_F)^2;
+
+tbw = factor * halfpbw^-2;
