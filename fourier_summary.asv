@@ -1,0 +1,24 @@
+function fourier_summary(x,Fs,opts)
+
+arguments
+    x
+    Fs
+    opts.N = 5
+    opts.rel = .05
+end
+
+[Fx,frqs] = fourier(x,Fs);
+FX = abs(Fx);
+
+ixs = find(islocalmax(FX));
+
+[~,si] = sort(-FX(ixs));
+N = min(length(ixs), opts.N);
+ixs = ixs(si(1:N));
+
+ixs = ixs(FX(ixs) > opts.rel * FX(ixs(1)));
+ixs = [1,ixs];
+
+for i = ixs(:)'
+    fprintf(" f=%5.2f  w=%5.2f  amp=%3.2f (%2.2f of max)\n", frqs(i), frqs(i) *2 * pi, FX(i), FXrel(i));
+end
