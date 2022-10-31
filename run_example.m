@@ -37,7 +37,7 @@ v = sum(comps,1); % the mixed signal
 % --
 % estimate components from mixed signal
 
-comps_hat = stable_demix(v, Fs, w1, w2);
+[comps_hat, ~, opt] = stable_demix(v, Fs, w1, w2);
 
 % --
 % show results
@@ -45,6 +45,6 @@ comps_hat = stable_demix(v, Fs, w1, w2);
 disp("randseed " + num2str(seed));
 
 r = 2 * round(2*pi/max(w1,w2) * Fs);
-evaluate_prediction(comps, comps_hat);
+evaluate_prediction(comps, comps_hat, opt.r);
 plot_gt_and_prediction(t, comps, comps_hat);
 

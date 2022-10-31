@@ -1,9 +1,11 @@
-function compare_components(Fs,compss,optss)
+function compare_components(Fs,compss,names)
+% compare_components(Fs,{comps1,comps2,..})
+% compare_components(Fs,{comps1,comps2,..},["name1","name2",..])
 
 if nargin==2
-    names = string(1:length(compss));
+    names = string(1:length(names));
 else
-    names = string(round([optss.r_dur]*1000,1)) + "ms";
+    names = string(names);
 end
 
 figure();

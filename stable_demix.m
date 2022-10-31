@@ -1,4 +1,4 @@
-function [comps, err] = stable_demix(v, Fs, w1, w2, options)
+function [comps, err, opt] = stable_demix(v, Fs, w1, w2, options)
 % A stable version of demix(). WIP.
 
 arguments
@@ -14,6 +14,8 @@ switch options.mode
         demix_fnc = @linear_demix;
     case "wt"
         demix_fnc = @wt_demix;
+    case "wt2"
+        demix_fnc = @wt_demix2;
     otherwise
         error("Unknown demix mode %s", options.mode);
 end

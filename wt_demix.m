@@ -4,7 +4,7 @@ arguments
     v
     Fs
     ws
-    options.params = [3,-1];
+    options.params = [3,80];
 end
 
 assert(length(ws)==1 || all(diff(ws) > 0), "Frequencies must be monotonically increasing");
