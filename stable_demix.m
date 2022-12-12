@@ -6,8 +6,10 @@ arguments
     Fs
     w1
     w2
-    options.mode = "wt"
+    options.mode = "naive"
 end
+
+disp(options.mode);
 
 switch options.mode
     case "linear"
@@ -16,6 +18,10 @@ switch options.mode
         demix_fnc = @wt_demix;
     case "wt2"
         demix_fnc = @wt_demix2;
+    case "wt3"
+        demix_fnc = @wt_demix3;
+    case "naive"
+        demix_fnc = @naive_demix;
     otherwise
         error("Unknown demix mode %s", options.mode);
 end
