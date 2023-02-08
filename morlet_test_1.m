@@ -1,11 +1,11 @@
 
 
-Fs = 1000;
-dur = 5;
+Fs = 5000;
+dur = 3;
 t = (0:(dur*Fs-1))/Fs;
 
-f1 = 151;
-f2 = 282;
+f1 = 51;
+f2 = 82;
 
 L = length(t);
 ix1 = round(.2*L):round(.6*L);
@@ -19,7 +19,18 @@ C2(ix2) = sin(2*pi*f2*t(ix2));
 
 x = C1+C2;
 
-c1 = conv(x,make_morlet(Fs,f1,n=1),'same');
-c2 = conv(x,make_morlet(Fs,f2,n=1),'same');
+n=4;
+sigmas=5;
+c1 = morlet_tform(x,Fs,f1,n=n,sigmas=sigmas);
+c2 = morlet_tform(x,Fs,f2,n=n,sigmas=sigmas);
+
+figure();
+tiledlayout(3,1,TileSpacing="compact",Padding="compact");
+nexttile();
+plot(t,x,'r',t,real(c1)+real(c2),'b');
+nexttile();
+plot(t,C1,'r',t,real(c1),'b');
+nexttile();
+plot(t,C2,'r',t,real(c2),'b');
 
 

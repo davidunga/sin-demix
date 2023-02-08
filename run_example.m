@@ -9,6 +9,7 @@ rng(seed);
 
 w1 = 151 * 2 * pi;
 w2 = 282 * 2 * pi;
+w2 = 2*w1;
 
 Fs = 5e3; % sampling freq [Hz]
 T = .25; % signal duration [sec]
@@ -31,18 +32,25 @@ params.p2 = pi/4 + phase_amp * sin(randrng(w_rng) * t);
 params.w1 = w1;
 params.w2 = w2;
 
+params.p2 = params.p1;
+
 comps = params2comps(params, t);
 v = sum(comps,1); % the mixed signal
 
 % --
 % estimate components from mixed signal
 
-[comps_hat, ~, opt] = stable_demix(v, Fs, w1, w2);
+[comps_hat, ~, opt] = stable_demix(v, Fs, w1, w2, mode="naive");
 
 % --
 % show results
 
 disp("randseed " + num2str(seed));
+
+rr=100:length(v)-100;
+comps=comps(:,rr);
+comps_hat=comps_hat(:,rr);
+t=t(rr);
 
 r = 2 * round(2*pi/max(w1,w2) * Fs);
 evaluate_prediction(comps, comps_hat, opt.r);
