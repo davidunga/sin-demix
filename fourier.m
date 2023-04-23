@@ -18,7 +18,7 @@ if opts.show
     figure();
     tiledlayout(2,1,TileSpacing="compact",Padding="compact");
     nexttile();
-    plot((0:(round(N)-1))/Fs,x,'g');
+    plot((0:(length(x)-1))/Fs,x,'g');
     ylabel('Signal');
     xlabel('t [sec]');
     nexttile();

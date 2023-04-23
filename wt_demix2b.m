@@ -1,4 +1,4 @@
-function [comps,opt] = wt_demix2(v,Fs,ws,options)
+function [comps,opt] = wt_demix2b(v,Fs,ws,options)
 
 arguments
     v
@@ -69,6 +69,7 @@ WT_phase = unwrap(atan2(imag(WT), real(WT)),pi,2) + pi/2;
 assert(~any(isnan(WT_amp(:))));
 assert(~any(isnan(WT_phase(:))));
 
+d = 0;
 for i = 1 : length(ws)
 
     [~, ix] = min(abs(WT_frqs - ws(i)/(2*pi)));
@@ -87,7 +88,7 @@ for i = 1 : length(ws)
         phase_diff = abs(WT_phase(ix,rest_ixs) - w_est*t(rest_ixs));
         phase_diff_MAD = median(abs(phase_diff-median(phase_diff)));
         ransac_result = ransac_line([t(rest_ixs)',WT_phase(ix,rest_ixs)'], phase_diff_MAD);
-    
+
         assert(abs(1-ransac_result(1)/ws(i)) < W_REFINE_TOL);  % sanity
         
         ws_refined(i) = ransac_result(1);   % omega
@@ -97,19 +98,29 @@ for i = 1 : length(ws)
         ph(i) = 0;
     end
 
-    % Get amplitude and phase at refined omega:
-    [tt, ff] = meshgrid(t, ws_refined(i)/(2*pi));
-    a(i,:) = interp2(WT_tGrid, WT_fGrid, WT_amp, tt, ff, "spline");
-    p(i,:) = interp2(WT_tGrid, WT_fGrid, WT_phase, tt, ff, "spline") - ws_refined(i)*t;
+    if i==1
+        assert(d==0);
+        d = Fs*2*pi/ws_refined(1);
+        dc = movavg(v, d);
+    end
+
+    zz = movavg(v.*exp(1i*ws_refined(i)*t),d);
+
+    a(i,:) = 2*abs(zz);
+    p(i,:) = atan2(real(zz), imag(zz));
 
     comps(i, :) = a(i,:).*sin(ws_refined(i)*t + p(i,:));
 
 end
 
+ret = MixParams(Fs=Fs, ws=ws, dc=dc, a=a, p=p, ph=ph);
+comps = ret.comps;
+
 if has_dc
-    comps = [v - sum(comps,1); comps];
+    comps(1,:) = v - sum(comps(2:end,:),1);
 end
 
+opt.dc = dc;
 opt.r = margin;
 opt.a = a;
 opt.p = p;

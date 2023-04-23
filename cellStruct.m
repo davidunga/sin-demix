@@ -1,10 +1,10 @@
 function s = cellStruct(params)
-% make struct of cell parameters
+% Make struct of cell parameters
 
 arguments
-    params.c double
-    params.ve double
-    params.vi double
+    params.c    % capacitance
+    params.ve   % excitatory reversal potential
+    params.vi   % inhibitory reversal potential
 end
 
 s = struct(c=params.c, ve=params.ve, vi=params.vi);

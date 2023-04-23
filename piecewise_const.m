@@ -4,9 +4,10 @@ function x = piecewise_const(L, vals, locs)
 %   L - length of vector
 %   vals - array of values for each piece.
 %   locs - location of piece starts. can be, either:
-%       1. An array, same size as [vals]. First value must be 1.
-%       2. 'u' - uniformly spaced pieces (default)
-%       3. 'r' - randomly spaced pieces
+%       1. An array of indices (between 1 and L), same size as [vals]. First value must be 1.
+%       2. An array of relative indices (between 0 and 1), same size as [vals]. First value must be 0.
+%       3. 'u' - uniformly spaced pieces (default).
+%       4. 'r' - randomly spaced pieces.
 % OUTPUT:
 %   array [1,L]
 
@@ -21,6 +22,10 @@ if ~isnumeric(locs)
         error('Unknown locs value');
     end
 else
+    if locs(1) == 0
+        assert(all(locs <= 1));
+        locs = round(locs * (L - 1)) + 1;
+    end
     assert(locs(1) == 1, "First location must be 1");
     locs(end+1) = L;
 end

@@ -1,15 +1,19 @@
 function s = exprStruct(params)
-% make struct of experiment parameters
+% Make struct of experiment parameters
 
 arguments
-    params.Fs double
-    params.f1 double = NaN
-    params.f2 double = NaN   
+    params.Fs               % Sampling rate [Hz]
+    params.ws = []          % Injected omegas [Rad/sec]
+    params.rest_win = []    % Rest window start & end times [sec]
 end
 
-assert(isnan(params.f1) == isnan(params.f2));
+s = struct(Fs=params.Fs, ws=sort(params.ws), rest_win=params.rest_win);
 
-s = struct();
-s.Fs = params.Fs;
-s.w1 = params.f1 * 2 * pi;
-s.w2 = params.f2 * 2 * pi;
+if ~isempty(s.ws)
+    assert(all(s.ws>0));
+end
+
+if ~isempty(s.rest_win)
+    assert(numel(s.rest_win)==2);
+    assert(diff(s.rest_win)>0);
+end

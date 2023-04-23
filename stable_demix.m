@@ -7,8 +7,10 @@ arguments
     w1
     w2
     options.mode = "naive"
+    options.stable = true
 end
 
+disp([w1,w2]);
 disp(options.mode);
 
 switch options.mode
@@ -31,13 +33,18 @@ v = v(:)';
 % demix as usual:
 [comps_full,opt] = demix_fnc(v, Fs, [0, w1, w2]);
 
-% susbtract DC, demix again:
-comps_noDc = demix_fnc(v - comps_full(1,:), Fs, [0, w1, w2]);
+if options.stable
+    % susbtract DC, demix again:
+    comps_noDc = demix_fnc(v - comps_full(1,:), Fs, [0, w1, w2]);
+    
+    % final components: treat DC component of "no DC" demix as error, and
+    % therefore substract if from the DC component. Take sin components from
+    % "no DC" demix as-is:
+    comps = [comps_full(1,:) - comps_noDc(1,:); comps_noDc(2:3,:)];
 
-% final components: treat DC component of "no DC" demix as error, and
-% therefore substract if from the DC component. Take sin components from
-% "no DC" demix as-is:
-comps = [comps_full(1,:) - comps_noDc(1,:); comps_noDc(2:3,:)];
+else
+    comps = comps_full;
+end
 
 % calc error:
 vhat = sum(comps,1);

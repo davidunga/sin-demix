@@ -22,6 +22,8 @@ global evf1 evf2 VF1 VF2 IF1 IF2 IF eif1 eif2 hilbVf1 hilbIf1 hilbVf2 hilbIf2 ff
 global DFilter
 
 
+VVo = V;
+
 Xfound = [0 0];
 
 global GTC;
@@ -322,6 +324,7 @@ if isempty(DavidData); %was not yet determined.
 end
 
 if DavidData
+    '...david data'
     global VF1David VF2David comps_hatV comps_hatI V_or_I comps_hatV_IL Stable_demix_op
     fffknown = 0;% this is to use if we want to specify the frequencies as used (1) or used those measured above (0)
     if fffknown;
@@ -330,8 +333,13 @@ if DavidData
     V_or_I = 1;
     %stable_demix
     
+    demixmode = 'linear';
+    demixmode = 'wt';
+    %demixmode = 'wt2';
+   Stable_demix_op  = 1;
     if Stable_demix_op;
-        [comps_hatV,err] = stable_demix(V, 1/dt, 2*pi*ff, 2*pi*ff2);
+
+        [comps_hatV,err] = stable_demix(V, 1/dt, 2*pi*ff, 2*pi*ff2,mode = demixmode);
     else
         [comps_hatV,err] = demix(V, 1/dt, 2*pi*ff, 2*pi*ff2);
     end
@@ -341,7 +349,7 @@ if DavidData
     VF2 = comps_hatV(3,:);
     V_or_I = 0;
     if Stable_demix_op;
-        [comps_hatI,err] = stable_demix(I, 1/dt, 2*pi*ff, 2*pi*ff2);
+        [comps_hatI,err] = stable_demix(I, 1/dt, 2*pi*ff, 2*pi*ff2,mode = demixmode);
     else
         [comps_hatI,err] = demix(I, 1/dt, 2*pi*ff, 2*pi*ff2);
     end
@@ -361,14 +369,6 @@ hilbIf1 = hilbert(IF1);
 
 hilbVf2 = hilbert(VF2);
 hilbIf2 = hilbert(IF2);
-
-absval = abs(hilbIf1);
-ii = round(.3*length(absval)):round(.6*length(absval));
-%hilbIf1 = hilbIf1 ./ absval * mean(absval(ii));
-
-absval = abs(hilbIf2);
-ii = round(.3*length(absval)):round(.6*length(absval));
-%hilbIf2 = hilbIf2 ./ absval * mean(absval(ii));
 
 meif2 = mean(eif2(2000:end-2000));
 meif1 = mean(eif1(2000:end-2000));
@@ -463,8 +463,10 @@ if NewExact3% solving based on absolute value:
     g2 = [];
     %test for imag part to be minus for current only.
 
-    z1 = hilbVf1./hilbIf1;
-    z2 = hilbVf2./hilbIf2;
+    z1 = 1*hilbVf1./hilbIf1;
+    z2 = 1*hilbVf2./hilbIf2;
+    
+    
     testiFFT =0;
     if testiFFT
         DFF = (ff2-ff)*0.11;
@@ -477,6 +479,7 @@ if NewExact3% solving based on absolute value:
 
     lowpassZ = 0;
     if lowpassZ;
+        Filtype = 1;
         if Filtype == 0
             bpFilt_FFZ=  designfilt('lowpassiir', 'FilterOrder', 14, ...
                 'PassbandFrequency', ff-40, 'PassbandRipple', 0.2,...
@@ -484,8 +487,8 @@ if NewExact3% solving based on absolute value:
             z1 = filtfilt(bpFilt_FFZ,z1);
             z2 = filtfilt(bpFilt_FFZ,z2);
         else
-            z1 = lowpass(z1,ff/4,1/dt,'ImpulseResponse','iir','StopbandAttenuation',80,'Steepness', 0.999999);
-            z2 = lowpass(z2,ff/4,1/dt,'ImpulseResponse','iir','StopbandAttenuation',80,'Steepness', 0.999999);
+            z1 = lowpass(z1,ff,1/dt,'ImpulseResponse','iir','StopbandAttenuation',80,'Steepness', 0.999999);
+            z2 = lowpass(z2,ff2,1/dt,'ImpulseResponse','iir','StopbandAttenuation',80,'Steepness', 0.999999);
         end
 
     end
@@ -493,7 +496,7 @@ if NewExact3% solving based on absolute value:
 
     cleannoise = 0; % to smooth the
     if cleannoise;
-        wws = 1313;
+        wws = 751;
         z11r = smooth(real(z1),wws);
         z11i = smooth(imag(z1),wws);
         z1o = z1;
@@ -587,14 +590,24 @@ if NewExact3% solving based on absolute value:
             end
         end
     end
+    rcc = 0; %try to correct jan 2023
+    if rcc
+    z1a = 1*z1a+30*MC;
+    z2a = 1*z2a-30*MC;
 
-
+    end
     Rs_meas = (1/(2*(1i*c*w1 - 1i*c*w2)))*(1i*c*w1*z1a - 1i*c*w2*z1a + 1i*c*w1*z2a -...
         1i*c*w2*z2a + ((-1i*c*w1*z1a + 1i*c*w2*z1a - 1i*c*w1*z2a + 1i*c*w2*z2a).^2 -...
         4*(1i*c*w1 - 1i*c*w2)*(z1a - z2a + 1i*c*w1*z1a.*z2a - 1i*c*w2*z1a.*z2a)).^0.5);
+    if rcc  %jan 2023
+        
+    end
 
-    Gtotal = ((1i*(1i + c*Rs_meas*w1 - c*w1*z1a))./(Rs_meas - z1a));
-
+    Gtotal = 1*((1i*(1i + c*Rs_meas*w1 - c*w1*z1a))./(Rs_meas - z1a));
+    
+    %setting the z1 and z2 as the last ones. 2023
+    z1 = z1a;
+    z2 = z2a;
 
     newsol2022 = 1;
     if newsol2022;% found today (7/4/2022) that mathematica (application) gives another way:
@@ -704,6 +717,12 @@ if DavidData %using the method of David Ungarish
 end
 % dvdt and c
 if 1 % 2022 to xxxx checkit !!!!
+    svv = size(VC);
+    sii = size(Iclean);
+    if svv~=sii;
+        Iclean = Iclean';
+    end
+
     VC = VC-Iclean.*abs(re); % to bridge balance the voltage
     VC = VC-Iclean.*real(re); % to bridge balance the voltage %changed on 4/11/2021
 end

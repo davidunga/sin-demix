@@ -1,77 +1,99 @@
-function res = estimate_conductances(I,V,rest_win,expr,cell,options)
+function res = estimate_conductances(I,V,expr_info,cell_info,opts)
 
 arguments
     I
     V
-    rest_win
 
-    expr                        % experiment params struct
-    cell                        % cell params struct
+    expr_info                   % experiment params struct
+    cell_info                   % cell params struct
 
-    options.Vrest_p = 15        % voltage percentile within rest window to classify as rest
-    options.clean_r = 60        % half-size of Fpass band for cleaning
-    options.demix_mode = "wt"   % type of demix
+    opts.demix_mode = "wt"      % demix mode
+    opts.stable_demix = 0       % use stable demix
+    opts.gtot_kind = 1          % 1/2. gtot computation variant. 1 produces non-negative values.
+    opts.rest_dur = .2          % duration of rest window [sec] to detect. if 0, expr_info.rest_win will be used.
+    opts.use_input_ws = 0       % prefer omegas from input
+    opts.smooth_zs = 0          % smooth Zs
 end
 
 % ------------------------------
 % Prepare:
 
-[w1, w2] = get_w1_w2(expr, I);
-Fs = expr.Fs;
+Fs = expr_info.Fs;
+ws = sort(dominant_freqs(I,Fs))*2*pi;
+
+% validate
+assert(length(ws)==2);
+assert(all(ws>0));
+if ~isempty(expr_info.ws)
+    assert(max(abs(ws-expr_info.ws)./expr_info.ws) < .005);
+end
+
+if opts.use_input_ws
+    ws = expr_info.ws;
+end
+
+period_sz = 2*pi/min(ws)*Fs;
 
 % ------------------------------
 % Demix:
 
-[comps_hatV,~] = stable_demix(V, Fs, w1, w2, mode=options.demix_mode);
+Idmx = do_demix(I, Fs, ws, mode=opts.demix_mode, stable=opts.stable_demix);
+Vdmx = do_demix(V, Fs, ws, mode=opts.demix_mode, stable=opts.stable_demix);
+
+comps_hatI = Idmx.comps();
+I1 = comps_hatI(2,:);
+I2 = comps_hatI(3,:);
+
+comps_hatV = Vdmx.comps();
 V0 = comps_hatV(1,:);
 V1 = comps_hatV(2,:);
 V2 = comps_hatV(3,:);
 
-[comps_hatI,~] = stable_demix(I, Fs, w1, w2, mode=options.demix_mode);
-I1 = comps_hatI(2,:);
-I2 = comps_hatI(3,:);
-
 % ------------------------------
 % Impedances:
 
-hV1 = hilbert(V1);
-hI1 = hilbert(I1);
-hV2 = hilbert(V2);
-hI2 = hilbert(I2);
-z1 = hV1./hI1;
-z2 = hV2./hI2;
+z1 = hilbert(V1)./hilbert(I1);
+z2 = hilbert(V2)./hilbert(I2);
+
+if opts.smooth_zs
+    z1 = movavg(z1, period_sz);
+    z2 = movavg(z2, period_sz);
+end
 
 % ------------------------------
 % Electrode resistance and total conductance:
 
-Rs_est = calc_Rs(cell.c, w1, w2, z1, z2);
-gtot = 1i*(1i + cell.c*Rs_est*w1 - cell.c*w1*z1) ./ (Rs_est - z1);
-gtot = real(gtot);
+Rs = calc_Rs(cell_info.c, ws, z1, z2);
+
+%zz1 = z1*exp(1i*.055*pi/180);
+zz1=z1;
+gtot = calc_gtotal(cell_info.c, ws, zz1, z2, 3);
 
 % ------------------------------
 % Clean:
 
 Iclean = I;
-for frq = [w1,w2] / (2*pi)
-    Fpass = frq + [-1, 1] * options.clean_r;
-    Iclean = bandstop(Iclean, Fpass, Fs, ImpulseResponse='fir', Steepness=.54, StopbandAttenuation=25);
+for frq = ws(:)' / (2*pi)
+    Iclean = bandstop(Iclean, frq + [-1, 1]*60, Fs, ImpulseResponse='fir', Steepness=.54, StopbandAttenuation=25);
 end
-
-V0 = V0 - Iclean .* abs(Rs_est);
-V0 = V0 - Iclean .* real(Rs_est);
+V0 = V0 - Iclean.*real(Rs);
 
 % ------------------------------
 % Conductances:
 
 % leak:
-rest_ixs = get_rest_potential_ixs(Fs, rest_win, V0, options.Vrest_p);
+if opts.rest_dur == 0
+    rest_ixs = get_rest_ixs_fromWindow(Fs, V0, expr_info.rest_win);
+else
+    rest_ixs = get_low_variance_window(V0, Fs, ws);
+end
 vl = mean(V0(rest_ixs));
 gl = mean(gtot(rest_ixs));
 
 % gi:
 dv = diff(V0);
-cdvdt = cell.c*[dv dv(end)]*Fs;
-gi = (cdvdt + gl.*(V0 - vl) + (gtot - gl).*(V0 - cell.ve) - Iclean) ./ (cell.vi - cell.ve);
+cdvdt = cell_info.c*[dv dv(end)]*Fs;
+gi = (cdvdt + gl.*(V0 - vl) + (gtot - gl).*(V0 - cell_info.ve) - Iclean) ./ (cell_info.vi - cell_info.ve);
 gi = real(gi);
 
 % ge:
@@ -82,8 +104,8 @@ ge = gtot - gl - gi;
 
 res = struct();
 
-res.Iin = gi.*(V0 - cell.vi);
-res.Iex = ge.*(V0 - cell.ve);
+res.Iin = gi.*(V0 - cell_info.vi);
+res.Iex = ge.*(V0 - cell_info.ve);
 
 res.ge = ge;
 res.gi = gi;
@@ -100,42 +122,65 @@ res.V2 = V2;
 res.I1 = I1;
 res.I2 = I2;
 
-res.Rs_est = Rs_est;
+res.Rs_est = Rs;
 
 res.cdvdt = cdvdt;
 res.Iclean = Iclean;
 
-res.cell = cell;
-res.expr = exprStruct(Fs=Fs,f1=w1/(2*pi),f2=w2/(2*pi));
+res.cell = cell_info;
+res.expr = exprStruct(Fs=Fs,ws=ws);
 return
 
 
 % =================================================================
 % Helper functions
 
+function Rs = calc_Rs(c,ws,z1,z2)
+q = c*(ws(2) - ws(1))*(z2 - z1);
+Rs = (z1 + z2)/2 + 1i*sqrt(-q.^2 - 1i*4*q) / (2*c *(ws(2) - ws(1)));
+return
 
-function ixs = get_rest_potential_ixs(Fs, rest_win, V0, Vrest_p)
+function gtot = calc_gtotal(c,ws,z1,z2,kind)
+% calc gtotal.
+% kind = calculation variant to use. variants are mathematically equivalent, but for
+% variant 1 matlab produces non-negative results.
+
+q = c*(ws(2) - ws(1))*(z2 - z1);
+
+%r = round(.1*length(z1));
+%BIAS = .13*mean(abs(q(r:end-r)));
+if kind==1
+    d = q - sqrt(q.^2 + 1i*4*q);
+    gtot = -2*c*(ws(2) - ws(1)) * real(1./d);
+elseif kind==2
+    d = q + 1i*sqrt(-q.^2 - 1i*4*q);
+    gtot = -2*c*(ws(2) - ws(1)) * real(1./d);
+elseif kind==3
+    % approximation
+    gtot = c*(ws(2) - ws(1))/sqrt(2)*abs(real((1-1i)./sqrt(q)));
+else
+    error("Unknown gtot kind");
+end
+
+return
+
+% --
+% Lagacy helpers:
+
+function ixs = get_rest_ixs_fromWindow(Fs, V0, rest_win)
+assert(numel(rest_win)==2 && diff(rest_win)>0);
 ifm = round(rest_win(1) * Fs);
 ito = round(rest_win(2) * Fs);
-ixs = ifm + find(V0(ifm:ito) <= prctile(V0(ifm:ito), Vrest_p));
+ixs = ifm + find(V0(ifm:ito) <= prctile(V0(ifm:ito), 15));
 return
 
-function [w1, w2] = get_w1_w2(expr, I)
-[FT, FT_frqs] = fourier(I, expr.Fs);
-[~, dominant_frqs] = findpeaks(abs(FT), FT_frqs, MinPeakDistance=5, NPeaks=2);
-w1 = min(dominant_frqs) * 2 * pi;
-w2 = max(dominant_frqs) * 2 * pi;
-if expr.w1 ~= 0
-    % omegas were given - make sure they match fft
-    assert(abs(expr.w1 - w1)/expr.w1 < .01);
-    assert(abs(expr.w2 - w2)/expr.w2 < .01);
-    w1 = expr.w1;
-    w2 = expr.w2;
-end
-return
-
-function Rs = calc_Rs(c,w1,w2,z1,z2)
+function Rs = calc_Rs_LEGACY(c,ws,z1,z2)
+w1 = ws(1);
+w2 = ws(2);
 Rs = (1/(2*(1i*c*w1 - 1i*c*w2)))*(1i*c*w1*z1 - 1i*c*w2*z1 + 1i*c*w1*z2 - ...
     1i*c*w2*z2 + ((-1i*c*w1*z1 + 1i*c*w2*z1 - 1i*c*w1*z2 + 1i*c*w2*z2).^2 - ...
     4*(1i*c*w1 - 1i*c*w2)*(z1 - z2 + 1i*c*w1*z1.*z2 - 1i*c*w2*z1.*z2)).^0.5);
 return
+
+
+

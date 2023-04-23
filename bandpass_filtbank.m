@@ -1,4 +1,4 @@
-function fb = bandpass_filtbank(N,Fs,f,wv)
+function fb = bandpass_filtbank(N,Fs,f,opts)
 % Frequency-localized filter bank.
 % Creates a filter bank which includes excactly 3 frequencies: [f-df,f,f+df],
 %   where df is the smallest frequency step (="voice") around f.
@@ -13,17 +13,22 @@ function fb = bandpass_filtbank(N,Fs,f,wv)
 %   or:
 %       parameters for morse wavelet- [gamma, powerBandWidth]
 
-if ~exist("wv","var")
-    wv = "morse";
+arguments
+    N
+    Fs
+    f
+    opts.wv = "morse"
+    opts.r = 1
 end
 
 vpo = 48;
 params = struct( ...
     SignalLength=N, ...
     SamplingFrequency=Fs, ...
-    FrequencyLimits=2.^(log2(f) + (1/vpo) * [-1.0001,1]), ...
+    FrequencyLimits=2.^(log2(f) + (opts.r/vpo) * [-1.0001,1]), ...
     VoicesPerOctave=vpo);
 
+wv = opts.wv;
 if isnumeric(wv)
     assert(length(wv)==2);
     wv(2) = morseBandWidth_Power2Time(f,wv(2));
