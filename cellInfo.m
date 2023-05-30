@@ -1,4 +1,4 @@
-function s = cellStruct(params)
+function s = cellInfo(params)
 % Make struct of cell parameters
 
 arguments

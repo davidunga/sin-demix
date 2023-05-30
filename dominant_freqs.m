@@ -32,7 +32,7 @@ if length(peak_amps) > opts.n
 end
 
 % -----------------------------------------------------------------
-% Refine- replace each peak with nearest spline local maxima
+% Refine- replace each peak with spline local maxima
 
 refined_peaks = struct();
 spln = spline(frqs, amps);

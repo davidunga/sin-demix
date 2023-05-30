@@ -2,6 +2,7 @@
 % ------------------------
 
 PLOT_ALL_GS = 0;
+PLOT_DMX = 1;
 
 % ------------------------
 
@@ -18,23 +19,41 @@ else
 end
 
 figure(Position=[300,300,800,length(gs_to_plot)*400]);
-tl = tiledlayout(length(gs_to_plot),1,TileSpacing="compact",Padding="compact");
+tl = tiledlayout(length(gs_to_plot)+2*PLOT_DMX,1,TileSpacing="compact",Padding="compact");
 for name = gs_to_plot
-    disp(name);
     nexttile(); hold on;
     plot(ret.T,ret.(upper(name)),"r",DisplayName="True");
-    plot(ret.T,res.(name),"b",DisplayName="Predicted");
+    plot(ret.T,res.(name),"k",DisplayName="Predicted");
     xlabel("time");
     ylabel(name);
     grid on;
-    lgnd=legend();
-    lgnd.Orientation="horizontal";
-    lgnd.Location = "north";
-    lgnd.Title.Visible = true;
-    lgnd.Title.String = upper(name);
+    add_legend(title=upper(name), Location="NW");
 end
 
-fs=round(ret.expr.ws/(2*pi));
+if PLOT_DMX
+    nexttile(); hold on;
+    plot(ret.T,res.Vdmx.a(1,:),"b",DisplayName="a1");
+    plot(ret.T,res.Vdmx.a(2,:),"g",DisplayName="a2");
+    xlabel("time");
+    ylabel("Amp");
+    grid on;
+    add_legend(title="Estimated V Amps", Location="NW");
+
+    nexttile(); hold on;
+    plot(ret.T,res.Vdmx.p(1,:),"b",DisplayName="p1");
+    plot(ret.T,res.Vdmx.p(2,:),"g",DisplayName="p2");
+    xlabel("time");
+    ylabel("Phase");
+    grid on;
+    add_legend(title="Estimated V Phases", Location="NW");
+end
+
+linkaxes(allaxes(),"x");
+xlim([5/100, ret.T(end)-5/100]);
+
+fs = round(ret.expr_info.ws/(2*pi));
 fig_name = sprintf("%d %d Hz", fs(1), fs(2));
 title(tl,fig_name);
-saveas(gcf, fig_name + ".jpg");
+
+
+% saveas(gcf, fig_name + ".jpg");

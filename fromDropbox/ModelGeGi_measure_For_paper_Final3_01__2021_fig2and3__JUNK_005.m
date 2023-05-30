@@ -237,7 +237,7 @@ for HHH = 1:1;
             SW = 1; %sine wave injection is on
             if SW == 1;
                 Fss = [121.0 263 251 301 4411]; % 220 277
-                Fss = [111 222 251 301 4411]*4; % 220 277 Feb2023
+                Fss = [111 222*1 251 301 4411]*4; % 220 277 Feb2023
                 %Fss = [103 196 251 301 4411]; % 220 277
                 fsin1 = Fss(1);
                 fsin2 = Fss(2);
@@ -559,9 +559,9 @@ else
     
     else
 
-    cellp = cellStruct(c=c,ve=revs(1),vi=revs(3));
-    expr = exprStruct(Fs=1/dt,ws=2*pi*[fsin1,fsin2]);
-    res = estimate_conductances(Iinj,V,expr,cellp,stable_demix=false);
+    cell_info = cellInfo(c=c,ve=revs(1),vi=revs(3));
+    expr_info = exprInfo(Fs=1/dt,ws=2*pi*[fsin1,fsin2]);
+    res = estimate_conductances(Iinj,V,expr_info,cell_info,stable_demix=false);
     return
 
     [ge,gi,gl,re,VC,GT,Zt,cmm,Xfound,ff,ff2,g1,g2,z1,z2,vl,Iin,Iex]=  findGeGi_MultiFreq_v005_temp(V,Iinj,1/dt,c,revs,[0.4 0.7],1,FILTP,-1,BoostCe,0,FreqArray,FiltType,hybridCe,removeHighLow,compensLowRin);% dsds ?????%     

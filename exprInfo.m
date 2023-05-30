@@ -1,4 +1,4 @@
-function s = exprStruct(params)
+function s = exprInfo(params)
 % Make struct of experiment parameters
 
 arguments

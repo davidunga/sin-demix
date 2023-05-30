@@ -1,5 +1,7 @@
 classdef MixParams < handle
 
+    % Sine-Mix parameters
+
     properties
         Fs
         ws
